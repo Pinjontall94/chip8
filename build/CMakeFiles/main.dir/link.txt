@@ -1,0 +1,1 @@
+/usr/lib64/ccache/cc -rdynamic CMakeFiles/main.dir/src/main.c.o -o main 
