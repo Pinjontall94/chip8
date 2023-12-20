@@ -1,3 +1,0 @@
-/home/sammi/code/c/chip8/bin/CMakeFiles/main.dir
-/home/sammi/code/c/chip8/bin/CMakeFiles/edit_cache.dir
-/home/sammi/code/c/chip8/bin/CMakeFiles/rebuild_cache.dir
