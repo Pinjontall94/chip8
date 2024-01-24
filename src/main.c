@@ -1,37 +1,30 @@
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
-#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
-#include <SDL2/SDL.h>
 #include <stdio.h>
 
-int main(int argc, char** argv){
+int main(int argc, char **argv) {
     SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_Window* window = SDL_CreateWindow(
-            "Chip8 Window",
-            SDL_WINDOWPOS_UNDEFINED,
-            SDL_WINDOWPOS_UNDEFINED,
-            640, 320, SDL_WINDOW_SHOWN
-    );
+    SDL_Window *window =
+        SDL_CreateWindow("Chip8 Window", SDL_WINDOWPOS_UNDEFINED,
+                SDL_WINDOWPOS_UNDEFINED, 640, 320, SDL_WINDOW_SHOWN);
 
     printf("hey girl! :3\n");
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(
-            window, 
-            -1, 
-            SDL_TEXTUREACCESS_TARGET
-    );
+    SDL_Renderer *renderer =
+        SDL_CreateRenderer(window, -1, SDL_TEXTUREACCESS_TARGET);
+
+    // Quit Condition Flag
+    int quit = 0;
 
     // Event Loop
-    while(1)
-    {
-        SDL_Event event;
-        while(SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_Quit)
-            {
-                goto out;
-            }
+    while (quit == 0) {
+        SDL_Event e;
+        SDL_WaitEvent(&e);
+
+        if (e.type == SDL_QUIT) {
+            quit = 1;
         }
 
         // Paint Screen Black
@@ -47,8 +40,8 @@ int main(int argc, char** argv){
         SDL_RenderDrawRect(renderer, &r);
         SDL_RenderPresent(renderer);
     }
-
-out:
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+
     return 0;
 }
