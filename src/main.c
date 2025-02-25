@@ -1,17 +1,25 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "../include/chip8.h"
+#include "../include/chip8keyboard.h"
+#include "../include/config.h"
+
+const char keyboard_map[CHIP8_TOTAL_KEYS] = { SDLK_x, SDLK_1, SDLK_2, SDLK_3, SDLK_q, SDLK_w, SDLK_e, SDLK_a,
+                                             SDLK_s, SDLK_d, SDLK_z, SDLK_c, SDLK_4, SDLK_r, SDLK_f, SDLK_v};
 
 int main(int argc, char **argv)
 {
     // Test if memory setter and getter work
     struct chip8 chip8;
-    chip8_memory_set(&chip8.memory, 0x50, 'Z');
-    printf("%c\n", chip8_memory_get(&chip8.memory, 0x50));
+    chip8_keyboard_down(&chip8.keyboard, 0x0e);
+    bool is_down = chip8_keyboard_is_down(&chip8.keyboard, 0x0f);
+    printf("%i\n", is_down);
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow(EMULATOR_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
