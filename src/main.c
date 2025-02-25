@@ -10,7 +10,7 @@
 #include "../include/chip8keyboard.h"
 #include "../include/config.h"
 
-const char keyboard_map[CHIP8_TOTAL_KEYS] = { SDLK_x, SDLK_1, SDLK_2, SDLK_3, SDLK_q, SDLK_w, SDLK_e, SDLK_a,
+const char keyboard_map[CHIP8_TOTAL_KEYS] = {SDLK_x, SDLK_1, SDLK_2, SDLK_3, SDLK_q, SDLK_w, SDLK_e, SDLK_a,
                                              SDLK_s, SDLK_d, SDLK_z, SDLK_c, SDLK_4, SDLK_r, SDLK_f, SDLK_v};
 
 int main(int argc, char **argv)
@@ -37,9 +37,25 @@ int main(int argc, char **argv)
         SDL_Event e;
         SDL_WaitEvent(&e);
 
-        if (e.type == SDL_QUIT)
+        switch (e.type)
         {
+        case SDL_QUIT:
             quit = 1;
+            break;
+
+        case SDL_KEYDOWN: {
+            char key = e.key.keysym.sym;
+            int virt_key = chip8_keyboard_map(keyboard_map, key);
+            printf("Key is down: %x\n", virt_key);
+        }
+        break;
+
+        case SDL_KEYUP: {
+            char key = e.key.keysym.sym;
+            int virt_key = chip8_keyboard_map(keyboard_map, key);
+            printf("Key is up: %x\n", virt_key);
+        }
+        break;
         }
 
         // Paint Screen Black
