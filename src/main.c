@@ -17,9 +17,6 @@ int main(int argc, char **argv)
 {
     // Test if memory setter and getter work
     struct chip8 chip8;
-    chip8_keyboard_down(&chip8.keyboard, 0x0e);
-    bool is_down = chip8_keyboard_is_down(&chip8.keyboard, 0x0f);
-    printf("%i\n", is_down);
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow(EMULATOR_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -46,14 +43,20 @@ int main(int argc, char **argv)
         case SDL_KEYDOWN: {
             char key = e.key.keysym.sym;
             int virt_key = chip8_keyboard_map(keyboard_map, key);
-            printf("Key is down: %x\n", virt_key);
+            if (virt_key != -1)
+            {
+                chip8_keyboard_down(&chip8.keyboard, virt_key);
+            }
         }
         break;
 
         case SDL_KEYUP: {
             char key = e.key.keysym.sym;
             int virt_key = chip8_keyboard_map(keyboard_map, key);
-            printf("Key is up: %x\n", virt_key);
+            if (virt_key != -1)
+            {
+                chip8_keyboard_up(&chip8.keyboard, virt_key);
+            }
         }
         break;
         }
