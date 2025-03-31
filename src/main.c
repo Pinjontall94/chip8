@@ -14,18 +14,21 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-void pulse_wave(Sint16 *stream, int stream_len, Sint16 freq, double pulse_width, double vol);
-void beeper(void *Userdata, Uint8 *stream, int stream_len);
+void fill_wave_table(Sint16 *samples, int samples_len, bool sound_on);
+void pulse_wave(Sint16 *samples, int samples_len, Sint16 freq, double pulse_width, double vol);
+void print_wave_table(Sint16 *samples, int samples_len);
 
 const char keyboard_map[CHIP8_TOTAL_KEYS] = {SDLK_x, SDLK_1, SDLK_2, SDLK_3, SDLK_q, SDLK_w, SDLK_e, SDLK_a,
                                              SDLK_s, SDLK_d, SDLK_z, SDLK_c, SDLK_4, SDLK_r, SDLK_f, SDLK_v};
 
 int main(int argc, char **argv)
 {
+    // Final return code
+    int status = 0;
     // Test if memory setter and getter work
     struct chip8 chip8;
     chip8_init(&chip8);
-    chip8.registers.sound_timer = 255;
+    chip8.registers.sound_timer = 20;
 
     for (int i = 0; i < 9; i++)
     {
@@ -35,24 +38,17 @@ int main(int argc, char **argv)
     SDL_Init(SDL_INIT_EVERYTHING);
 
     // Audio setup
-    SDL_AudioSpec want = {
-        .freq = SAMPLE_RATE,
-        .format = AUDIO_S16LSB, // Sint16, little-endian
-        .channels = 1,
-        .size = AUDIO_BUF_SIZE,
-        .callback = beeper,
-        .userdata = (void *)chip8.registers.sound_timer,
-    };
-    SDL_AudioSpec obtained = {0};
-
-    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(NULL, 0, &want, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
-    if (dev < 1)
+    SDL_AudioStream *stream = SDL_NewAudioStream(AUDIO_S16, 1, 44100, AUDIO_F32, 2, 44100);
+    Sint16 samples[AUDIO_BUF_SIZE] = {0};
+    if (stream == NULL)
     {
-        fprintf(stderr, "Failed to open audio device: %s\n", SDL_GetError());
-        return 1;
+        fprintf(stderr, "Failed to create new audio stream: %s\n", SDL_GetError());
+        status = 1;
+        goto teardown;
     }
-    // Unpause audio (start playback)
-    SDL_PauseAudioDevice(dev, 0);
+    // ready to use stream!
+    pulse_wave(samples, AUDIO_BUF_SIZE, 512, 0.5, 0.01); // Fill samples buffer
+    print_wave_table(samples, AUDIO_BUF_SIZE);
     printf("Successfully initialized audio\n");
 
     SDL_Window *window = SDL_CreateWindow(EMULATOR_WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -130,18 +126,42 @@ int main(int argc, char **argv)
         if (chip8.registers.sound_timer > 0)
         {
             SDL_Delay(100);
-            /* call sound generator */
+            printf("chip8.registers.sound_timer: %d\n", chip8.registers.sound_timer);
+
+            // Fill the samples buffer with a square wave
+            pulse_wave(samples, AUDIO_BUF_SIZE, 512, 0.5, 0.01);
             chip8.registers.sound_timer--;
         }
+        else
+        {
+            // Silence, fill the samples buffer with 0s
+            for (int i = 0; i < AUDIO_BUF_SIZE; i++)
+            {
+                samples[i] = 0;
+            }
+            printf("chip8.registers.sound_timer: %d\n", chip8.registers.sound_timer);
+        }
+
+        // Fill audio stream with samples buffer (pulse or silence)
+        int rc = SDL_AudioStreamPut(stream, samples, AUDIO_BUF_SIZE * sizeof(Sint16));
+        if (rc == -1)
+        {
+            fprintf(stderr, "Failed to put samples in stream: %s\n", SDL_GetError());
+            goto audio_teardown;
+        }
     }
+audio_teardown:
+    SDL_FreeAudioStream(stream);
+teardown:
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
-    return 0;
+    return status;
 }
 
-void pulse_wave(Sint16 *stream, int stream_len, Sint16 freq, double pulse_width, double vol)
+void pulse_wave(Sint16 *samples, int samples_len, Sint16 freq, double pulse_width, double vol)
 {
+    // Fill a Sint16 array with a pulse wave
     Sint16 const MAX = floor(65535.0 / 2.0);
     float const delta = (float)freq / SAMPLE_RATE;
     double phase = 0.00;
@@ -150,7 +170,7 @@ void pulse_wave(Sint16 *stream, int stream_len, Sint16 freq, double pulse_width,
     // Make sure freq is below nyquist and volume isn't too loud
     // [WARNING: DO NOT USE HEADPHONES]
     assert(freq < (SAMPLE_RATE / 2) && vol > 0.00 && vol < 0.1);
-    for (int i = 0; i < stream_len; i++)
+    for (int i = 0; i < samples_len; i++)
     {
         if (phase < pulse_width)
             value = MAX;
@@ -160,23 +180,16 @@ void pulse_wave(Sint16 *stream, int stream_len, Sint16 freq, double pulse_width,
         phase += delta;
         if (phase >= 1)
             phase -= 1;
-        stream[i] = final_value;
+        samples[i] = final_value;
     }
 }
 
-void beeper(void *sound_timer, Uint8 *stream, int stream_len)
+void print_wave_table(Sint16 *samples, int samples_len)
 {
-    // Ensure the stream_len is a power of 2
-    assert((stream_len & (stream_len - 1)) == 0);
-
-    // Read the hardware register value of the chip8
-    if ((char unsigned)sound_timer > 0)
+    assert(samples_len > 0);
+    for (int i = 0; i < samples_len; i++)
     {
-        pulse_wave((Sint16 *)stream, (stream_len / 2), 255, 0.5, 0.01);
-    } else {
-        // Silence: just fill the stream with zeroes
-        for (int i = 0; i < stream_len; i++) {
-            stream[i] = 0;
-        }
+        printf("%d\t", samples[i]);
     }
+    printf("\n");
 }
