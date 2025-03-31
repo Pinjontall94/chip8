@@ -28,7 +28,8 @@ bool chip8_screen_draw_sprite(struct chip8_screen *screen, int x, int y, char co
         // loop through the sprite layer, painting the screen offset by x & y
         for (int lx = 0; lx < 8; lx++) {
             // check if 1b >> by lx to current pos matches c (if a pixel should be there)
-            if ((c & (0b10000000 >> lx)) == 0)
+            // 0b10000000 == 0x80
+            if ((c & (0x80 >> lx)) == 0)
                 continue;
 
             // check if there's a collision with an existing pixel

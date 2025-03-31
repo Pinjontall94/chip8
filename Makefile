@@ -6,10 +6,10 @@ CC=gcc
 OPT=-O0
 # Tell make to track header file changes
 DEPFLAGS=-MP -MD
-WARNINGS=-Wall -Wextra -pedantic
+WARNINGS=-Wall -Wextra -Werror -pedantic -std=c99
 # Tell make to load specified libraries and add /usr/local/include to ld path
-LDLIBS=-lasan -lSDL2 -lm
-LDFLAGS=-L/usr/local/include -fsanitize=address
+LDLIBS=-lSDL2 -lm
+LDFLAGS=-L/usr/local/include
 CFLAGS=$(WARNINGS) -g -std=c99 $(foreach D,$(INCLUDEDIRS),-I$(D)) $(OPT) $(DEPFLAGS)
 
 # Loop through all source dirs, glob for *.c files

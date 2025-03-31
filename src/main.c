@@ -21,7 +21,7 @@ void print_wave_table(Sint16 *samples, int samples_len);
 const char keyboard_map[CHIP8_TOTAL_KEYS] = {SDLK_x, SDLK_1, SDLK_2, SDLK_3, SDLK_q, SDLK_w, SDLK_e, SDLK_a,
                                              SDLK_s, SDLK_d, SDLK_z, SDLK_c, SDLK_4, SDLK_r, SDLK_f, SDLK_v};
 
-int main(int argc, char **argv)
+int main(void)
 {
     // Final return code
     int status = 0;
