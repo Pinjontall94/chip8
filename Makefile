@@ -8,16 +8,21 @@ OPT=-O0
 DEPFLAGS=-MP -MD
 WARNINGS=-Wall -Wextra -pedantic
 # Tell make to load specified libraries and add /usr/local/include to ld path
-LDLIBS=-lSDL2
-LDFLAGS=-L/usr/local/include
-CFLAGS=$(WARNINGS) -g -std=c2x $(foreach D,$(INCLUDEDIRS),-I$(D)) $(OPT) $(DEPFLAGS)
+LDLIBS=-lasan -lSDL2 -lm
+LDFLAGS=-L/usr/local/include -fsanitize=address
+CFLAGS=$(WARNINGS) -g -std=c99 $(foreach D,$(INCLUDEDIRS),-I$(D)) $(OPT) $(DEPFLAGS)
 
 # Loop through all source dirs, glob for *.c files
 SRCFILES=$(foreach X,$(SRCDIRS),$(wildcard $(X)/*.c))
 OBJECTS=$(patsubst %.c,%.o,$(SRCFILES))
 DEPFILES=$(patsubst %.c,%.d,$(SRCFILES))
 
+.PHONY: all
 all: $(BINARY)
+
+.PHONY: run
+run:
+	$(BINARY)
 
 $(BINARY): $(OBJECTS)
 	[ -d "bin" ] || mkdir bin
@@ -29,6 +34,7 @@ $(BINARY): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+.PHONY: clean
 clean:
 	rm -rf $(BINARY) $(OBJECTS) $(DEPFILES)
 	[ -f "$(BINARY)" ] || rmdir bin
